@@ -8,13 +8,25 @@ import css from './App.module.css';
 
 export class App extends Component {
   state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
+    contacts: [],
     filter: '',
+  };
+
+  componentDidMount() {
+    const storedContacts = JSON.parse(localStorage.getItem('contacts'));
+    this.setState({
+      contacts: Array.isArray(storedContacts) ? storedContacts : [],
+    });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.contacts !== this.state.contacts) {
+      this.updateLocalStorage();
+    }
+  }
+
+  updateLocalStorage = () => {
+    localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
   };
 
   handleFilter = e => {
@@ -22,6 +34,7 @@ export class App extends Component {
   };
 
   handleSubmit = contact => {
+    console.log('contact :>> ', contact);
     const { name } = contact;
     const { contacts } = this.state;
 
@@ -33,16 +46,26 @@ export class App extends Component {
     if (isDuplicate) {
       alert(`${name} is already in contacts!`);
     } else {
-      this.setState(prevState => ({
-        contacts: [{ id: nanoid(), ...contact }, ...prevState.contacts],
-      }));
+      this.setState(
+        prevState => ({
+          contacts: [{ id: nanoid(), ...contact }, ...prevState.contacts],
+        }),
+        () => {
+          this.updateLocalStorage();
+        }
+      );
     }
   };
 
   handleDeleteContact = id => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== id),
-    }));
+    this.setState(
+      prevState => ({
+        contacts: prevState.contacts.filter(contact => contact.id !== id),
+      }),
+      () => {
+        this.updateLocalStorage();
+      }
+    );
   };
 
   render() {
